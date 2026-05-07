@@ -17,6 +17,8 @@ menuline = pygame.image.load('sidemenuline.png')
 menuline = pygame.transform.scale(menuline, (147, 1))
 welcomuser = pygame.image.load('welcome.png')
 welcomuser = pygame.transform.scale(welcomuser, (255, 39))
+bgdoodles = pygame.image.load('bgdoodles.png')
+bgdoodles = pygame.transform.scale(bgdoodles, (WIDTH, HEIGHT))
 
 
 class Button:
@@ -60,6 +62,10 @@ def main():
     account_button = Button((3, 88), (94, 24), 'account.png')
     howto_button = Button((3, 163), (115, 20), 'howtoplay.png')
     back_home_button = Button((139, 14), (24, 24), 'backhome.png')
+    diff_button = Button((145, 229), (221, 65), 'differences.png')
+    patt_button = Button((145, 361), (221, 65), 'patterns.png')
+    seq_button = Button((145, 493), (221, 65), 'sequences.png')
+    homebutton = Button((455, 18), (24, 24), 'backhome.png')
 
     running = True
     while running:
@@ -70,49 +76,82 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
 
-                exit_button.check_press(mouse_pos)
-                menu_button.check_press(mouse_pos)
-
-                if current_screen == 'main_menu':
-                    if select_puzzle_button.check_press(mouse_pos):
-                        current_screen = 'select_puzzle'
-                    if account_button.check_press(mouse_pos):
-                        current_screen = 'account_page'
-                if current_screen in ['select_puzzle', 'account_page']:
-                    if account_button.check_press(mouse_pos):
-                        current_screen = 'account_page'
-
-                if howto_button.check_press(mouse_pos):
-                    pass  # Implement how to play screen later
-
-                if back_home_button.check_press(mouse_pos):
-                    current_screen = 'main_menu'
-
+                # Menu button is always available
                 if menu_button.check_press(mouse_pos):
                     menu_open = not menu_open
 
+                # Check buttons based on current screen
+                if current_screen == 'main_menu':
+                    if select_puzzle_button.check_press(mouse_pos):
+                        current_screen = 'select_puzzle'
+                    elif exit_button.check_press(mouse_pos):
+                        pass  # Exit handled by ExitButton class
+                
+                elif current_screen == 'select_puzzle':
+                    if diff_button.check_press(mouse_pos):
+                        current_screen = 'diff_difficulty'  # We'll add this screen
+                    elif patt_button.check_press(mouse_pos):
+                        pass  # Implement patterns later
+                    elif seq_button.check_press(mouse_pos):
+                        pass  # Implement sequences later
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+                
+                elif current_screen == 'account_page':
+                    if exit_button.check_press(mouse_pos):
+                        pass  # Exit handled by ExitButton class
+
+                # Menu buttons when menu is open
+                if menu_open and menu_x > -MENU_WIDTH:
+                    if account_button.check_press(mouse_pos):
+                        current_screen = 'account_page'
+                        menu_open = False
+                    elif howto_button.check_press(mouse_pos):
+                        pass  # Implement how to play screen later
+                    elif back_home_button.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+                        menu_open = False
+
         mouse_pos = pygame.mouse.get_pos()
 
-        exit_button.update(mouse_pos)
-        select_puzzle_button.update(mouse_pos)
+        # Only update buttons that are visible on current screen
+        if current_screen == 'main_menu':
+            exit_button.update(mouse_pos)
+            select_puzzle_button.update(mouse_pos)
+        elif current_screen == 'select_puzzle':
+            diff_button.update(mouse_pos)
+            patt_button.update(mouse_pos)
+            seq_button.update(mouse_pos)
+        elif current_screen == 'account_page':
+            exit_button.update(mouse_pos)
+        
+        # Menu button is always available
         menu_button.update(mouse_pos)
-        account_button.update(mouse_pos)
-        howto_button.update(mouse_pos)
-        back_home_button.update(mouse_pos)
+        
+        # Menu buttons when menu is open
+        if menu_open and menu_x > -MENU_WIDTH:
+            account_button.update(mouse_pos)
+            howto_button.update(mouse_pos)
+            back_home_button.update(mouse_pos)
 
         screen.fill((255, 255, 255))
 
         if current_screen == 'main_menu':
             screen.blit(logo_image, (130, 45))
+            screen.blit(bgdoodles, (0, 0))
             exit_button.draw(screen)
             select_puzzle_button.draw(screen)
             menu_button.draw(screen)
 
         elif current_screen == 'select_puzzle':
             screen.fill((255, 255, 255))
+            screen.blit(bgdoodles, (0, 0))
             screen.blit(logo_image, (130, 45))
-            exit_button.draw(screen)
             menu_button.draw(screen)
+            diff_button.draw(screen)
+            patt_button.draw(screen)
+            seq_button.draw(screen)
+            homebutton.draw(screen)
 
         elif current_screen == 'account_page':
             screen.fill((255, 255, 255))
