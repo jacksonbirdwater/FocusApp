@@ -19,6 +19,10 @@ welcomuser = pygame.image.load('welcome.png')
 welcomuser = pygame.transform.scale(welcomuser, (255, 39))
 bgdoodles = pygame.image.load('bgdoodles.png')
 bgdoodles = pygame.transform.scale(bgdoodles, (WIDTH, HEIGHT))
+difftitle = pygame.image.load('difftitle.png')
+difftitle = pygame.transform.scale(difftitle, (456, 150))
+difficultybg = pygame.image.load('difficultybg.png')
+difficultybg = pygame.transform.scale(difficultybg, (WIDTH, HEIGHT))
 
 
 class Button:
@@ -66,6 +70,9 @@ def main():
     patt_button = Button((145, 361), (221, 65), 'patterns.png')
     seq_button = Button((145, 493), (221, 65), 'sequences.png')
     homebutton = Button((455, 18), (24, 24), 'backhome.png')
+    easydiffbutton = Button((129, 253), (221, 65), 'easy.png')
+    meddiffbutton = Button((129, 384), (221, 65), 'med.png')
+    harddiffbutton = Button((129, 515), (221, 65), 'hard.png')
 
     running = True
     while running:
@@ -124,6 +131,10 @@ def main():
             seq_button.update(mouse_pos)
         elif current_screen == 'account_page':
             exit_button.update(mouse_pos)
+        elif current_screen == 'diff_difficulty':
+            easydiffbutton.update(mouse_pos)
+            meddiffbutton.update(mouse_pos)
+            harddiffbutton.update(mouse_pos)
         
         # Menu button is always available
         menu_button.update(mouse_pos)
@@ -158,6 +169,15 @@ def main():
             screen.blit(welcomuser, (21, 61))
             exit_button.draw(screen)
             menu_button.draw(screen)
+
+        elif current_screen == 'diff_difficulty':
+            screen.fill((255, 255, 255))
+            screen.blit(difftitle, (22, 73))
+            menu_button.draw(screen)
+            easydiffbutton.draw(screen)
+            meddiffbutton.draw(screen)
+            harddiffbutton.draw(screen)
+            
 
         if menu_open and menu_x < 0:
             menu_x += MENU_SPEED
