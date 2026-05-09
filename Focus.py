@@ -23,6 +23,8 @@ difftitle = pygame.image.load('difftitle.png')
 difftitle = pygame.transform.scale(difftitle, (456, 150))
 difficultybg = pygame.image.load('difficultybg.png')
 difficultybg = pygame.transform.scale(difficultybg, (WIDTH, HEIGHT))
+patternstitle = pygame.image.load('patternstitle.png')
+patternstitle = pygame.transform.scale(patternstitle, (456, 193))
 
 
 class Button:
@@ -70,9 +72,9 @@ def main():
     patt_button = Button((145, 361), (221, 65), 'patterns.png')
     seq_button = Button((145, 493), (221, 65), 'sequences.png')
     homebutton = Button((455, 18), (24, 24), 'backhome.png')
-    easydiffbutton = Button((129, 253), (221, 65), 'easy.png')
-    meddiffbutton = Button((129, 384), (221, 65), 'med.png')
-    harddiffbutton = Button((129, 515), (221, 65), 'hard.png')
+    easydiffbutton = Button((145, 253), (221, 65), 'easy.png')
+    meddiffbutton = Button((145, 384), (221, 65), 'med.png')
+    harddiffbutton = Button((145, 515), (221, 65), 'hard.png')
 
     running = True
     while running:
@@ -98,10 +100,18 @@ def main():
                     if diff_button.check_press(mouse_pos):
                         current_screen = 'diff_difficulty'  # We'll add this screen
                     elif patt_button.check_press(mouse_pos):
-                        pass  # Implement patterns later
+                        current_screen = 'patterns_screen'  
                     elif seq_button.check_press(mouse_pos):
                         pass  # Implement sequences later
                     elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+                
+                elif current_screen == 'diff_difficulty':
+                    if homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+                
+                elif current_screen == 'patterns_screen':
+                    if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
                 
                 elif current_screen == 'account_page':
@@ -135,6 +145,14 @@ def main():
             easydiffbutton.update(mouse_pos)
             meddiffbutton.update(mouse_pos)
             harddiffbutton.update(mouse_pos)
+            homebutton.update(mouse_pos)
+        elif current_screen == 'patterns_screen':
+            homebutton.update(mouse_pos)
+            easydiffbutton.update(mouse_pos)
+            meddiffbutton.update(mouse_pos)
+            harddiffbutton.update(mouse_pos)
+
+        
         
         # Menu button is always available
         menu_button.update(mouse_pos)
@@ -177,6 +195,16 @@ def main():
             easydiffbutton.draw(screen)
             meddiffbutton.draw(screen)
             harddiffbutton.draw(screen)
+            homebutton.draw(screen)
+
+        elif current_screen == 'patterns_screen':
+            screen.fill((255, 255, 255))
+            screen.blit(patternstitle, (22, 30))
+            menu_button.draw(screen)
+            homebutton.draw(screen)
+            easydiffbutton.draw(screen)
+            meddiffbutton.draw(screen)  
+            harddiffbutton.draw(screen) 
             
 
         if menu_open and menu_x < 0:
