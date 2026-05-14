@@ -10,29 +10,37 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 MENU_WIDTH = 169
 MENU_HEIGHT = HEIGHT
 MENU_SPEED = 20
+clock = pygame.time.Clock()
 
-logo_image = pygame.image.load('logo.png')
+timer_font = pygame.font.SysFont("04B_19__,ttf", 24)
+timer_sec = 0
+timer_text = timer_font.render("00:00", True, (0, 0, 0))
+timer_running = False
+
+timer = pygame.USEREVENT + 1
+pygame.time.set_timer(timer, 1000)
+
+logo_image = pygame.image.load('images/logo.png')
 logo_image = pygame.transform.scale(logo_image, (241, 113))
-menuline = pygame.image.load('sidemenuline.png')
+menuline = pygame.image.load('images/sidemenuline.png')
 menuline = pygame.transform.scale(menuline, (147, 1))
-welcomuser = pygame.image.load('welcome.png')
+welcomuser = pygame.image.load('images/welcome.png')
 welcomuser = pygame.transform.scale(welcomuser, (255, 39))
-bgdoodles = pygame.image.load('bgdoodles.png')
+bgdoodles = pygame.image.load('images/bgdoodles.png')
 bgdoodles = pygame.transform.scale(bgdoodles, (WIDTH, HEIGHT))
-difftitle = pygame.image.load('difftitle.png')
+difftitle = pygame.image.load('images/difftitle.png')
 difftitle = pygame.transform.scale(difftitle, (456, 150))
-difficultybg = pygame.image.load('difficultybg.png')
+difficultybg = pygame.image.load('images/difficultybg.png')
 difficultybg = pygame.transform.scale(difficultybg, (WIDTH, HEIGHT))
-patternstitle = pygame.image.load('patternstitle.png')
+patternstitle = pygame.image.load('images/patternstitle.png')
 patternstitle = pygame.transform.scale(patternstitle, (456, 193))
-seqtitle = pygame.image.load('seqtitle.png')
+seqtitle = pygame.image.load('images/seqtitle.png')
 seqtitle = pygame.transform.scale(seqtitle, (456, 202))
-
 
 
 class Button:
     def __init__(self, position, size, filename):
-        self.normal_image = pygame.image.load(filename)
+        self.normal_image = pygame.image.load('images/' + filename)
         self.normal_image = pygame.transform.scale(self.normal_image, size)
 
         self.hover_image = self.normal_image.copy()
@@ -59,8 +67,9 @@ class ExitButton(Button):
             pygame.quit()
             sys.exit()
 
-
 def main():
+    global timer_sec, timer_running
+
     menu_x = -MENU_WIDTH
     menu_open = False
     current_screen = 'main_menu'
@@ -88,37 +97,60 @@ def main():
     running = True
     while running:
         for event in pygame.event.get():
+
             if event.type == pygame.QUIT:
                 running = False
+
+            if event.type == timer and timer_running:
+                timer_sec -= 1
+
+                if timer_sec <= 0:
+                    timer_sec = 0
+                    timer_running = False
+                    pygame.time.set_timer(timer, 0)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
 
-                # Menu button is always available
                 if menu_button.check_press(mouse_pos):
                     menu_open = not menu_open
 
-                # Check buttons based on current screen
                 if current_screen == 'main_menu':
                     if select_puzzle_button.check_press(mouse_pos):
                         current_screen = 'select_puzzle'
                     elif exit_button.check_press(mouse_pos):
-                        pass  # Exit handled by ExitButton class
-                
+                        pass
+
                 elif current_screen == 'select_puzzle':
                     if diff_button.check_press(mouse_pos):
-                        current_screen = 'diff_difficulty'  # We'll add this screen
+                        current_screen = 'diff_difficulty'
                     elif patt_button.check_press(mouse_pos):
-                        current_screen = 'patterns_screen'  
+                        current_screen = 'patterns_screen'
                     elif seq_button.check_press(mouse_pos):
                         current_screen = 'sequences_screen'
                     elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
-                
+
                 elif current_screen == 'diff_difficulty':
-                    if homebutton.check_press(mouse_pos):
+
+                    if easydiffbutton.check_press(mouse_pos):
+                        timer_sec = 120
+                        timer_running = True
+                        pygame.time.set_timer(timer, 1000)
+
+                    elif meddiffbutton.check_press(mouse_pos):
+                        timer_sec = 60
+                        timer_running = True
+                        pygame.time.set_timer(timer, 1000)
+
+                    elif harddiffbutton.check_press(mouse_pos):
+                        timer_sec = 30
+                        timer_running = True
+                        pygame.time.set_timer(timer, 1000)
+
+                    elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
-                
+
                 elif current_screen == 'patterns_screen':
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
@@ -126,56 +158,59 @@ def main():
                 elif current_screen == 'sequences_screen':
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
-                
+
                 elif current_screen == 'account_page':
                     if exit_button.check_press(mouse_pos):
-                        pass  # Exit handled by ExitButton class
+                        pass
 
-                # Menu buttons when menu is open
                 if menu_open and menu_x > -MENU_WIDTH:
                     if account_button.check_press(mouse_pos):
                         current_screen = 'account_page'
                         menu_open = False
                     elif howto_button.check_press(mouse_pos):
-                        pass  # Implement how to play screen later
+                        pass
                     elif back_home_button.check_press(mouse_pos):
                         current_screen = 'main_menu'
                         menu_open = False
 
+        mins = timer_sec // 60
+        secs = timer_sec % 60
+        timer_text = timer_font.render(f"{mins:02}:{secs:02}", True, (0, 0, 0))
+
         mouse_pos = pygame.mouse.get_pos()
 
-        # Only update buttons that are visible on current screen
         if current_screen == 'main_menu':
             exit_button.update(mouse_pos)
             select_puzzle_button.update(mouse_pos)
+
         elif current_screen == 'select_puzzle':
             diff_button.update(mouse_pos)
             patt_button.update(mouse_pos)
             seq_button.update(mouse_pos)
+
         elif current_screen == 'account_page':
             exit_button.update(mouse_pos)
+
         elif current_screen == 'diff_difficulty':
             easydiffbutton.update(mouse_pos)
             meddiffbutton.update(mouse_pos)
             harddiffbutton.update(mouse_pos)
             homebutton.update(mouse_pos)
+
         elif current_screen == 'patterns_screen':
             homebutton.update(mouse_pos)
             easypattbutton.update(mouse_pos)
             medpattbutton.update(mouse_pos)
             hardpattbutton.update(mouse_pos)
+
         elif current_screen == 'sequences_screen':
             homebutton.update(mouse_pos)
             easyseqbutton.update(mouse_pos)
             medseqbutton.update(mouse_pos)
             hardseqbutton.update(mouse_pos)
-        
-        
-        
-        # Menu button is always available
+
         menu_button.update(mouse_pos)
-        
-        # Menu buttons when menu is open
+
         if menu_open and menu_x > -MENU_WIDTH:
             account_button.update(mouse_pos)
             howto_button.update(mouse_pos)
@@ -191,7 +226,6 @@ def main():
             menu_button.draw(screen)
 
         elif current_screen == 'select_puzzle':
-            screen.fill((255, 255, 255))
             screen.blit(bgdoodles, (0, 0))
             screen.blit(logo_image, (130, 45))
             menu_button.draw(screen)
@@ -201,13 +235,11 @@ def main():
             homebutton.draw(screen)
 
         elif current_screen == 'account_page':
-            screen.fill((255, 255, 255))
             screen.blit(welcomuser, (21, 61))
             exit_button.draw(screen)
             menu_button.draw(screen)
 
         elif current_screen == 'diff_difficulty':
-            screen.fill((255, 255, 255))
             screen.blit(difftitle, (22, 73))
             menu_button.draw(screen)
             easydiffbutton.draw(screen)
@@ -215,25 +247,23 @@ def main():
             harddiffbutton.draw(screen)
             homebutton.draw(screen)
 
+            screen.blit(timer_text, (200, 200))
+
         elif current_screen == 'patterns_screen':
-            screen.fill((255, 255, 255))
             screen.blit(patternstitle, (22, 30))
             menu_button.draw(screen)
             homebutton.draw(screen)
             easypattbutton.draw(screen)
-            medpattbutton.draw(screen)  
-            hardpattbutton.draw(screen) 
+            medpattbutton.draw(screen)
+            hardpattbutton.draw(screen)
 
         elif current_screen == 'sequences_screen':
-            screen.fill((255, 255, 255))
             screen.blit(seqtitle, (22, 30))
             menu_button.draw(screen)
             homebutton.draw(screen)
             easyseqbutton.draw(screen)
-            medseqbutton.draw(screen)  
+            medseqbutton.draw(screen)
             hardseqbutton.draw(screen)
-
-            
 
         if menu_open and menu_x < 0:
             menu_x += MENU_SPEED
@@ -245,14 +275,13 @@ def main():
                 menu_x = -MENU_WIDTH
 
         pygame.draw.rect(screen, (255, 255, 255), (menu_x, 0, MENU_WIDTH, MENU_HEIGHT))
+
         if menu_x > -MENU_WIDTH:
-            font = pygame.font.SysFont(None, 24)
             menu_button.draw(screen)
             screen.blit(menuline, (11, 52))
             account_button.draw(screen)
             howto_button.draw(screen)
             back_home_button.draw(screen)
-            # MUSIC WILL BE ADDED LATER
 
         pygame.display.flip()
 
