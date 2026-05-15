@@ -19,3 +19,13 @@ patternstitle = pygame.image.load('images/patternstitle.png')
 patternstitle = pygame.transform.scale(patternstitle, (456, 193))
 seqtitle = pygame.image.load('images/seqtitle.png')
 seqtitle = pygame.transform.scale(seqtitle, (456, 202))
+
+# Placeholder game images (replace with actual images)
+image1 = pygame.image.load('spot the difference images/image1.png')  # Placeholder for image1
+image1 = pygame.transform.scale(image1, (300, 200))
+image1changed = pygame.image.load('spot the difference images/image1changed.png')  # Placeholder for image1changed
+image1changed = pygame.transform.scale(image1changed, (300, 200))
+image2 = pygame.image.load('spot the difference images/image2.png')  # Placeholder for image2
+image2 = pygame.transform.scale(image2, (300, 200))
+image2changed = pygame.image.load('spot the difference images/image2changed.png')  # Placeholder for image2changed
+image2changed = pygame.transform.scale(image2changed, (300, 200))

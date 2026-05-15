@@ -9,3 +9,5 @@ Checklist
  - complete puzzle functionalities (differences, patterns, sequences)
  - music
  - stats tracker
+ - make images for games
+ - design games
