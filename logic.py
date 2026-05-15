@@ -71,7 +71,6 @@ def main():
     current_screen = 'main_menu'
     selected_difficulty = None
 
-    # Game variables
     puzzles = ['image1', 'image2']
     current_puzzle = 0
     show_changed = False
@@ -102,8 +101,8 @@ def main():
     hardseqbutton = Button((145, 515), (221, 65), 'hard.png')
     start_button = Button((139, 316), (221, 65), 'startbutton.png')
     diff_start_howto_button = Button((140, 432), (115, 20), 'howtopla.png')
-    yes_button = Button((150, 500), (150, 60), 'easy.png')  # Placeholder for yes
-    no_button = Button((300, 500), (150, 60), 'hard.png')  # Placeholder for no
+    yes_button = Button((150, 500), (150, 60), 'easy.png')
+    no_button = Button((300, 500), (150, 60), 'hard.png')
 
     running = True
     while running:
@@ -187,16 +186,15 @@ def main():
                         initial_time = timer_sec
                         timer_running = True
                         pygame.time.set_timer(timer, 1000)
-                        # Initialize game
                         current_puzzle = 0
                         show_changed = False
-                        game_timer = 5  # Shortened for testing
+                        game_timer = 5
                         current_image = getattr(images, puzzles[current_puzzle])
                         current_image_name = puzzles[current_puzzle]
                         score = 0
-                        current_screen = 'game'  # Switch to game screen (implement later)
+                        current_screen = 'game'
                     elif diff_start_howto_button.check_press(mouse_pos):
-                        pass  # Add how-to behavior here if needed
+                        pass
                     elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
@@ -209,20 +207,19 @@ def main():
                         pass
 
                 elif current_screen == 'game':
-                    # Placeholder for game logic - for now, just show timer
+
                     if show_changed:
                         if yes_button.check_press(mouse_pos):
                             if 'changed' in current_image_name:
                                 print("Correct!")
                                 score += 1
                                 timer_sec = initial_time
-                                # Next puzzle
                                 current_puzzle += 1
                                 if current_puzzle >= len(puzzles):
                                     current_screen = 'score_screen'
                                 else:
                                     show_changed = False
-                                    game_timer = 5  # Shortened for testing
+                                    game_timer = 5
                                     current_image = getattr(images, puzzles[current_puzzle])
                                     current_image_name = puzzles[current_puzzle]
                             else:
@@ -233,13 +230,12 @@ def main():
                                 print("Correct!")
                                 score += 1
                                 timer_sec = initial_time
-                                # Next puzzle
                                 current_puzzle += 1
                                 if current_puzzle >= len(puzzles):
                                     current_screen = 'score_screen'
                                 else:
                                     show_changed = False
-                                    game_timer = 5  # Shortened for testing
+                                    game_timer = 5
                                     current_image = getattr(images, puzzles[current_puzzle])
                                     current_image_name = puzzles[current_puzzle]
                             else:
@@ -365,17 +361,16 @@ def main():
             hardseqbutton.draw(screen)
 
         elif current_screen == 'diff_start':
-            # screen.blit(difficultybg, (0, 0))  # Removed background image
-            screen.blit(difftitle, (22, 73))  # Keep the title
+            screen.blit(difftitle, (22, 73))
             menu_button.draw(screen)
             start_button.draw(screen)
             diff_start_howto_button.draw(screen)
             homebutton.draw(screen)
 
         elif current_screen == 'game':
-            screen.fill((255, 255, 255))  # Placeholder background
+            screen.fill((255, 255, 255))
             if current_image:
-                screen.blit(current_image, (100, 100))  # Center the image
+                screen.blit(current_image, (100, 100))
             screen.blit(timer_text, (231, 47))
             homebutton.draw(screen)
             menu_button.draw(screen)
