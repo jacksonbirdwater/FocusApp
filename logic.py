@@ -13,7 +13,7 @@ MENU_HEIGHT = HEIGHT
 MENU_SPEED = 20
 clock = pygame.time.Clock()
 
-timer_font = pygame.font.SysFont("superpowerregular", 24)
+timer_font = pygame.font.Font(None, 24)
 timer_sec = 0
 timer_text = timer_font.render("00:00", True, (0, 0, 0))
 timer_running = False
@@ -39,6 +39,8 @@ image4 = images.image4
 image4changed = images.image4changed
 image5 = images.image5
 image5changed = images.image5changed
+howtoplaytitle = images.howtoplaytitle
+howtoplaydiff = images.howtoplaydiff
 
 class Button:
     def __init__(self, position, size, filename):
@@ -186,6 +188,10 @@ def main():
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
+                elif current_screen == 'how_to_play':
+                    if homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
                 elif current_screen == 'diff_start':
                     if start_button.check_press(mouse_pos):
                         if selected_difficulty == 'easy':
@@ -209,7 +215,7 @@ def main():
                         score = 0
                         current_screen = 'game'
                     elif diff_start_howto_button.check_press(mouse_pos):
-                        pass
+                        current_screen = 'how_to_play'
                     elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
@@ -397,6 +403,12 @@ def main():
             diff_start_howto_button.draw(screen)
             homebutton.draw(screen)
 
+        elif current_screen == 'how_to_play':
+            screen.blit(howtoplaytitle, (161, 68))
+            screen.blit(howtoplaydiff, (50, 150))
+            homebutton.draw(screen)
+            menu_button.draw(screen)
+
         elif current_screen == 'game':
             # base background
             screen.fill((255, 255, 255))
@@ -411,7 +423,8 @@ def main():
                     img_x = (WIDTH - img_w) // 2
                     img_y = (HEIGHT - img_h) // 2
                     screen.blit(current_image, (img_x, img_y))
-            screen.blit(timer_text, (231, 47))
+            timer_rect = timer_text.get_rect(center=(248, 35))
+            screen.blit(timer_text, timer_rect)
             homebutton.draw(screen)
             menu_button.draw(screen)
             if show_changed:
@@ -421,9 +434,11 @@ def main():
         elif current_screen == 'score_screen':
             screen.fill((255, 255, 255))
             score_text = timer_font.render(f"Your Score: {score}", True, (0, 0, 0))
-            screen.blit(score_text, (200, 300))
+            screen.blit(score_text, (165, 300))
             homebutton.draw(screen)
             menu_button.draw(screen)
+
+        
 
         if menu_open and menu_x < 0:
             menu_x += MENU_SPEED
