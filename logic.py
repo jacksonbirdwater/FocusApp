@@ -29,6 +29,8 @@ difftitle = images.difftitle
 difficultybg = images.difficultybg
 patternstitle = images.patternstitle
 seqtitle = images.seqtitle
+howtoplaytitle = images.howtoplaytitle
+howtoplaydiff = images.howtoplaydiff
 image1 = images.image1
 image1changed = images.image1changed
 image2 = images.image2
@@ -39,8 +41,17 @@ image4 = images.image4
 image4changed = images.image4changed
 image5 = images.image5
 image5changed = images.image5changed
-howtoplaytitle = images.howtoplaytitle
-howtoplaydiff = images.howtoplaydiff
+image6 = images.image6
+image6changed = images.image6changed
+image7 = images.image7
+image7changed = images.image7changed
+image8 = images.image8
+image8changed = images.image8changed
+image9 = images.image9
+image9changed = images.image9changed
+image10 = images.image10
+image10changed = images.image10changed
+
 
 class Button:
     def __init__(self, position, size, filename):
@@ -79,7 +90,7 @@ def main():
     current_screen = 'main_menu'
     selected_difficulty = None
 
-    puzzles = ['image1', 'image2', 'image3', 'image4', 'image5']
+    puzzles = ['image1', 'image2', 'image3', 'image4', 'image5', 'image6', 'image7', 'image8', 'image9', 'image10']
     current_puzzle = 0
     show_changed = False
     game_timer = 0
@@ -116,6 +127,7 @@ def main():
     diff_start_howto_button = Button((139, 432), (221, 65), 'howtopla.png')
     yes_button = Button((62, 500), (150, 60), 'yes.png')
     no_button = Button((277, 500), (150, 60), 'no.png')
+    retrybutton = Button((144, 418), (212, 60), 'retrybutton.png')
 
     running = True
     while running:
@@ -224,8 +236,8 @@ def main():
                         current_screen = 'main_menu'
                         timer_running = False
                         pygame.time.set_timer(timer, 0)
-                    if exit_button.check_press(mouse_pos):
-                        pass
+                    if retrybutton.check_press(mouse_pos):
+                        current_screen = 'diff_start'
 
                 elif current_screen == 'game':
                     if show_changed and yes_button.check_press(mouse_pos):
@@ -298,7 +310,7 @@ def main():
 
         mouse_pos = pygame.mouse.get_pos()
 
-        if current_screen == 'main_menus':
+        if current_screen == 'main_menu':
             exit_button.update(mouse_pos)
             select_puzzle_button.update(mouse_pos)
 
@@ -341,6 +353,7 @@ def main():
 
         elif current_screen == 'score_screen':
             homebutton.update(mouse_pos)
+            retrybutton.update(mouse_pos)
 
         menu_button.update(mouse_pos)
 
@@ -434,9 +447,10 @@ def main():
         elif current_screen == 'score_screen':
             screen.fill((255, 255, 255))
             score_text = timer_font.render(f"Your Score: {score}", True, (0, 0, 0))
-            screen.blit(score_text, (165, 300))
+            screen.blit(score_text, (176, 252))
             homebutton.draw(screen)
             menu_button.draw(screen)
+            retrybutton.draw(screen)
 
         
 
