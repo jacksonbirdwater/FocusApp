@@ -18,6 +18,7 @@ timer_sec = 0
 timer_text = timer_font.render("00:00", True, (0, 0, 0))
 timer_running = False
 
+# custom timer event ticking every second
 timer = pygame.USEREVENT + 1
 pygame.time.set_timer(timer, 1000)
 
@@ -73,7 +74,6 @@ class Button:
         self.hovered = self.rect.collidepoint(mouse_pos)
 
     def draw(self, surface):
-        # darkens button slightly when hovered
         image = self.hover_image if self.hovered else self.normal_image
         surface.blit(image, self.rect)
 
@@ -83,6 +83,7 @@ class Button:
 
 class ExitButton(Button):
     def check_press(self, position):
+        # instantly quits game if clicked
         if super().check_press(position):
             pygame.quit()
             sys.exit()
@@ -93,10 +94,14 @@ def main():
 
     menu_x = -MENU_WIDTH
     menu_open = False
+
     current_screen = 'main_menu'
     selected_difficulty = None
 
-    puzzles = ['image1', 'image2', 'image3', 'image4', 'image5', 'image6', 'image7', 'image8', 'image9', 'image10']
+    # list of all puzzles used in a run
+    puzzles = ['image1', 'image2', 'image3', 'image4', 'image5',
+               'image6', 'image7', 'image8', 'image9', 'image10']
+
     current_puzzle = 0
     show_changed = False
     game_timer = 0
@@ -108,9 +113,12 @@ def main():
     initial_time = 0
 
     puzzle_is_changed = False
+
+    # used for transition flash before reveal
     flashing = False
     flash_start = 0
-    flash_duration = 300  # milliseconds
+    flash_duration = 300
+
     reveal_bonus = 0
 
     exit_button = ExitButton((139, 424), (221, 65), 'exitButton.png')
@@ -147,19 +155,16 @@ def main():
                 running = False
 
             if event.type == timer and timer_running:
-                # countdown while game is active
                 timer_sec -= 1
 
                 if current_screen == 'game' and not show_changed:
                     game_timer -= 1
-
                     if game_timer <= 0:
-                        # start a short flash before revealing the changed/unchanged image
+                        # triggers reveal after short delay
                         flashing = True
                         flash_start = pygame.time.get_ticks()
 
                 if timer_sec <= 0:
-                    # game ends when timer hits zero
                     timer_sec = 0
                     timer_running = False
                     pygame.time.set_timer(timer, 0)
@@ -176,6 +181,47 @@ def main():
                 if current_screen == 'main_menu':
                     if select_puzzle_button.check_press(mouse_pos):
                         current_screen = 'select_puzzle'
+                    elif exit_button.check_press(mouse_pos):
+                        pass
+
+                elif current_screen == 'select_puzzle':
+                    if diff_button.check_press(mouse_pos):
+                        current_screen = 'diff_difficulty'
+                    elif patt_button.check_press(mouse_pos):
+                        current_screen = 'patterns_screen'
+                    elif seq_button.check_press(mouse_pos):
+                        current_screen = 'sequences_screen'
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'diff_difficulty':
+
+                    if easydiffbutton.check_press(mouse_pos):
+                        selected_difficulty = 'easy'
+                        current_screen = 'diff_start'
+
+                    elif meddiffbutton.check_press(mouse_pos):
+                        selected_difficulty = 'medium'
+                        current_screen = 'diff_start'
+
+                    elif harddiffbutton.check_press(mouse_pos):
+                        selected_difficulty = 'hard'
+                        current_screen = 'diff_start'
+
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'patterns_screen':
+                    if homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'sequences_screen':
+                    if homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'how_to_play':
+                    if homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
 
                 elif current_screen == 'diff_start':
                     if start_button.check_press(mouse_pos):
@@ -190,22 +236,24 @@ def main():
                         initial_time = timer_sec
                         timer_running = True
                         pygame.time.set_timer(timer, 1000)
-                        # randomize puzzle order for this run
-                        random.shuffle(puzzles)
 
+                        # shuffle puzzles each run
+                        random.shuffle(puzzles)
                         current_puzzle = 0
-                        # Always start with unchanged image
+
+                        # always start from base image
                         current_image = getattr(images, puzzles[current_puzzle])
                         current_image_name = puzzles[current_puzzle]
-                        show_changed = False
 
+                        show_changed = False
                         game_timer = 5
                         reveal_bonus = 5
                         score = 0
-
                         current_screen = 'game'
+
                     elif diff_start_howto_button.check_press(mouse_pos):
                         current_screen = 'how_to_play'
+
                     elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
@@ -214,51 +262,56 @@ def main():
                         current_screen = 'main_menu'
                         timer_running = False
                         pygame.time.set_timer(timer, 0)
+
                     if retrybutton.check_press(mouse_pos):
                         current_screen = 'diff_start'
 
                 elif current_screen == 'game':
                     if show_changed and yes_button.check_press(mouse_pos):
                         if puzzle_is_changed:
-                            print("Correct!")
+                            print("correct")
                             score += 1
                             timer_sec += reveal_bonus
                             current_puzzle += 1
+
                             if current_puzzle >= len(puzzles):
                                 current_screen = 'score_screen'
                             else:
                                 show_changed = False
                                 game_timer = 5
-                                # Always start with unchanged image for next puzzle
                                 current_image = getattr(images, puzzles[current_puzzle])
                                 current_image_name = puzzles[current_puzzle]
+
                         else:
-                            print("Wrong!")
+                            print("wrong")
                             current_screen = 'score_screen'
 
                     elif show_changed and no_button.check_press(mouse_pos):
                         if not puzzle_is_changed:
-                            print("Correct!")
+                            print("correct")
                             score += 1
                             timer_sec += reveal_bonus
                             current_puzzle += 1
+
                             if current_puzzle >= len(puzzles):
                                 current_screen = 'score_screen'
                             else:
                                 show_changed = False
                                 game_timer = 5
                                 reveal_bonus = 5
-                                # Always start with unchanged image for next puzzle
                                 current_image = getattr(images, puzzles[current_puzzle])
                                 current_image_name = puzzles[current_puzzle]
+
                         else:
-                            print("Wrong!")
+                            print("wrong")
                             current_screen = 'score_screen'
+
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
                         timer_running = False
                         pygame.time.set_timer(timer, 0)
 
+                # menu interactions
                 if menu_open and menu_x > -MENU_WIDTH:
                     if account_button.check_press(mouse_pos):
                         current_screen = 'account_page'
@@ -269,28 +322,66 @@ def main():
                         current_screen = 'main_menu'
                         menu_open = False
 
-        # handle flash timing (non-blocking)
+        # reveal logic after delay
         if flashing:
             if pygame.time.get_ticks() - flash_start >= flash_duration:
                 puzzle_is_changed = random.choice([True, False])
+
                 if puzzle_is_changed:
                     current_image = getattr(images, puzzles[current_puzzle] + 'changed')
+                    current_image_name = puzzles[current_puzzle] + 'changed'
                 else:
                     current_image = getattr(images, puzzles[current_puzzle])
                     current_image_name = puzzles[current_puzzle]
+
                 show_changed = True
                 flashing = False
 
+        # time formatting for display
         mins = timer_sec // 60
         secs = timer_sec % 60
         timer_text = timer_font.render(f"{mins:02}:{secs:02}", True, (0, 0, 0))
 
         mouse_pos = pygame.mouse.get_pos()
 
+        # update hover states
         if current_screen == 'main_menu':
+            exit_button.update(mouse_pos)
             select_puzzle_button.update(mouse_pos)
 
+        elif current_screen == 'select_puzzle':
+            diff_button.update(mouse_pos)
+            patt_button.update(mouse_pos)
+            seq_button.update(mouse_pos)
+
+        elif current_screen == 'account_page':
+            exit_button.update(mouse_pos)
+
+        elif current_screen == 'diff_difficulty':
+            easydiffbutton.update(mouse_pos)
+            meddiffbutton.update(mouse_pos)
+            harddiffbutton.update(mouse_pos)
+            homebutton.update(mouse_pos)
+
+        elif current_screen == 'patterns_screen':
+            homebutton.update(mouse_pos)
+            easypattbutton.update(mouse_pos)
+            medpattbutton.update(mouse_pos)
+            hardpattbutton.update(mouse_pos)
+
+        elif current_screen == 'sequences_screen':
+            homebutton.update(mouse_pos)
+            easyseqbutton.update(mouse_pos)
+            medseqbutton.update(mouse_pos)
+            hardseqbutton.update(mouse_pos)
+
+        elif current_screen == 'diff_start':
+            start_button.update(mouse_pos)
+            diff_start_howto_button.update(mouse_pos)
+            homebutton.update(mouse_pos)
+
         elif current_screen == 'game':
+            homebutton.update(mouse_pos)
             if show_changed:
                 yes_button.update(mouse_pos)
                 no_button.update(mouse_pos)
@@ -306,6 +397,7 @@ def main():
             howto_button.update(mouse_pos)
             back_home_button.update(mouse_pos)
 
+        # draw everything
         screen.fill((255, 255, 255))
 
         if current_screen == 'main_menu':
@@ -367,37 +459,37 @@ def main():
             menu_button.draw(screen)
 
         elif current_screen == 'game':
-            # base background
             screen.fill((255, 255, 255))
+
             if flashing:
-                # draw a brief white flash covering the screen so the transition is hidden
                 screen.fill((255, 255, 255))
             else:
                 if current_image:
-                    # center image dynamically based on its current size
                     img_w = current_image.get_width()
                     img_h = current_image.get_height()
                     img_x = (WIDTH - img_w) // 2
                     img_y = (HEIGHT - img_h) // 2
                     screen.blit(current_image, (img_x, img_y))
+
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
+
             homebutton.draw(screen)
             menu_button.draw(screen)
+
             if show_changed:
                 yes_button.draw(screen)
                 no_button.draw(screen)
 
         elif current_screen == 'score_screen':
             screen.fill((255, 255, 255))
-            score_text = timer_font.render(f"Your Score: {score}", True, (0, 0, 0))
+            score_text = timer_font.render(f"Your score: {score}", True, (0, 0, 0))
             screen.blit(score_text, (176, 252))
             homebutton.draw(screen)
             menu_button.draw(screen)
             retrybutton.draw(screen)
 
-        
-
+        # menu slide animation
         if menu_open and menu_x < 0:
             menu_x += MENU_SPEED
             if menu_x > 0:
