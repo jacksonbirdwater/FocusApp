@@ -31,6 +31,8 @@ patternstitle = images.patternstitle
 seqtitle = images.seqtitle
 howtoplaytitle = images.howtoplaytitle
 howtoplaydiff = images.howtoplaydiff
+difficultybgg = images.difficultybgg
+howtoplaypatt = images.howtoplaypatt
 image1 = images.image1
 image1changed = images.image1changed
 image2 = images.image2
@@ -82,6 +84,149 @@ class ExitButton(Button):
             pygame.quit()
             sys.exit()
 
+COLOR_POOLS = {
+    'easy': ['71DD6B', 'E29065', '6F6BDD'],
+    'medium': ['71DD6B', 'E29065', '6F6BDD', '65D5E2', 'C965E2'],
+    'hard': ['71DD6B', 'E29065', '6F6BDD', '65D5E2', 'C965E2', 'E2657A', 'CFE265'],
+}
+COLOR_VALUES = {
+    '71DD6B': (113, 221, 107),
+    'E29065': (226, 144, 101),
+    '6F6BDD': (111, 107, 221),
+    '65D5E2': (101, 213, 226),
+    'C965E2': (201, 101, 226),
+    'E2657A': (226, 101, 122),
+    'CFE265': (207, 226, 101),
+}
+
+# Map each pattern color to a matching placeholder button image.
+COLOR_BUTTON_FILENAMES = {
+    '71DD6B': 'patternbuttongreen.png',
+    'E29065': 'patternbuttonorange.png',
+    '6F6BDD': 'patternbuttonblue.png',
+    '65D5E2': 'patternbuttoncyan.png',
+    'C965E2': 'patternbuttonpurple.png',
+    'E2657A': 'patternbuttonred.png',
+    'CFE265': 'patternbuttonyellow.png',
+}
+
+class ChoiceButton:
+    def __init__(self, rect, label, color, font, filename='startbutton.png'):
+        self.normal_image = pygame.image.load('images/' + filename)
+        self.normal_image = pygame.transform.scale(self.normal_image, (rect[2], rect[3]))
+        self.hover_image = self.normal_image.copy()
+        self.hover_image.fill(
+            (40, 40, 40, 0),
+            special_flags=pygame.BLEND_RGBA_SUB,
+        )
+        self.rect = pygame.Rect(rect)
+        self.label = label
+        self.color = color
+        self.font = font
+        self.hovered = False
+
+    def update(self, mouse_pos):
+        self.hovered = self.rect.collidepoint(mouse_pos)
+
+    def draw(self, surface):
+        image = self.hover_image if self.hovered else self.normal_image
+        surface.blit(image, self.rect)
+
+    def check_press(self, position):
+        return self.rect.collidepoint(position)
+
+
+def generate_pattern(level, difficulty):
+    if level < 4:
+        pool = COLOR_POOLS['easy']
+        a, b = random.sample(pool, 2)
+        if level % 2 == 1:
+            pattern = [a, b, a, b, a]
+            answer = b
+        else:
+            pattern = [b, a, b, a, b]
+            answer = a
+    elif level < 8:
+        pool = COLOR_POOLS['medium']
+        a, b, c = random.sample(pool, 3)
+        templates = [
+            ([a, b, c, a, b], c),
+            ([a, a, b, b, a], a),
+            ([a, b, a, c, a], a),
+            ([a, b, c, b, c], b),
+        ]
+        pattern, answer = random.choice(templates)
+    else:
+        pool = COLOR_POOLS['hard']
+        a, b, c, d = random.sample(pool, 4)
+        templates = [
+            ([a, a, b, a, a], b),
+            ([a, b, c, a, b], c),
+            ([a, b, a, b, c], a),
+            ([a, b, c, d, a], b),
+        ]
+        pattern, answer = random.choice(templates)
+    return pattern, answer
+
+
+def build_choices(correct, difficulty):
+    pool = COLOR_POOLS[difficulty]
+    distractors = [color for color in pool if color != correct]
+    random.shuffle(distractors)
+    choices = [correct] + distractors[:2]
+    random.shuffle(choices)
+    return choices
+
+
+def create_choice_buttons(choices, font):
+    buttons = []
+    total_width = len(choices) * 80 + (len(choices) - 1) * 20
+    start_x = (WIDTH - total_width) // 2
+    for index, choice in enumerate(choices):
+        filename = COLOR_BUTTON_FILENAMES.get(choice, 'startbutton.png')
+        buttons.append(ChoiceButton(
+            (start_x + index * 100, 460, 80, 80),
+            choice,
+            COLOR_VALUES[choice],
+            font,
+            filename=filename
+        ))
+    return buttons
+
+
+def draw_pattern_sequence(surface, sequence, font):
+    circle_diameter = 60
+    spacing = 20
+    question_width = 70
+    total_width = len(sequence) * circle_diameter + (len(sequence) - 1) * spacing + question_width
+    start_x = max(20, (WIDTH - total_width) // 2)
+    y = 280
+    panel_rect = pygame.Rect(start_x - 20, y - 70, total_width + 40, 140)
+    panel_rect.clamp_ip(pygame.Rect(0, 0, WIDTH, HEIGHT))
+    pygame.draw.rect(surface, (250, 250, 255), panel_rect, border_radius=24)
+    pygame.draw.rect(surface, (195, 195, 220), panel_rect, 2, border_radius=24)
+    for index, color_name in enumerate(sequence):
+        x = start_x + index * (circle_diameter + spacing)
+        center = (x + circle_diameter // 2, y)
+        pygame.draw.circle(surface, COLOR_VALUES[color_name], center, 30)
+        pygame.draw.circle(surface, (255, 255, 255), center, 24)
+    question_rect = pygame.Rect(start_x + len(sequence) * (circle_diameter + spacing), y - 30, question_width, 70)
+    question_rect.clamp_ip(pygame.Rect(0, 0, WIDTH, HEIGHT))
+    pygame.draw.rect(surface, (240, 240, 245), question_rect, border_radius=18)
+    pygame.draw.rect(surface, (180, 180, 200), question_rect, 2, border_radius=18)
+    q_text = font.render('?', True, (40, 40, 40))
+    q_rect = q_text.get_rect(center=question_rect.center)
+    surface.blit(q_text, q_rect)
+
+
+def start_pattern_game(difficulty, font):
+    level = 1 if difficulty == 'easy' else 4 if difficulty == 'medium' else 8
+    sequence, answer = generate_pattern(level, difficulty)
+    choices = build_choices(answer, difficulty)
+    buttons = create_choice_buttons(choices, font)
+    return level, sequence, answer, choices, buttons
+
+
 def main():
     global timer_sec, timer_running
 
@@ -103,6 +248,16 @@ def main():
     flash_start = 0
     flash_duration = 300  # milliseconds
     reveal_bonus = 0
+
+    pattern_difficulty = None
+    pattern_level = 1
+    pattern_sequence = []
+    pattern_choices = []
+    pattern_choice_buttons = []
+    pattern_correct_answer = None
+    pattern_message = ''
+    last_game_mode = None
+    how_to_play_mode = None
 
     exit_button = ExitButton((139, 424), (221, 65), 'exitButton.png')
     select_puzzle_button = Button((139, 270), (221, 65), 'selectPuzzleButton.png')
@@ -128,6 +283,15 @@ def main():
     yes_button = Button((62, 500), (150, 60), 'yes.png')
     no_button = Button((277, 500), (150, 60), 'no.png')
     retrybutton = Button((144, 418), (212, 60), 'retrybutton.png')
+    patterns_back_button = Button((344, 418), (120, 60), 'patterns.png')
+    patternbuttonblue = Button((145, 253), (80, 80), 'patternbuttonblue.png')
+    patternbuttongreen = Button((145, 253), (80, 80), 'patternbuttongreen.png')
+    patternbuttonpurple = Button((145, 253), (80, 80), 'patternbuttonpurple.png')
+    patternbuttonred = Button((145, 253), (80, 80), 'patternbuttonred.png')
+    patternbuttoncyan = Button((145, 253), (80, 80), 'patternbuttoncyan.png')
+    patternbuttonyellow = Button((145, 253), (80, 80), 'patternbuttonyellow.png')
+    patternbuttonorange = Button((145, 253), (80, 80), 'patternbuttonorange.png')
+    howtoplaypattbutton = Button((139, 432), (221, 65), 'howtoplaypattbutton.png')
 
     running = True
     while running:
@@ -193,16 +357,60 @@ def main():
                         current_screen = 'main_menu'
 
                 elif current_screen == 'patterns_screen':
-                    if homebutton.check_press(mouse_pos):
+                    if easypattbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'easy'
+                        last_game_mode = 'patterns'
+                        current_screen = 'patterns_start'
+                    elif medpattbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'medium'
+                        last_game_mode = 'patterns'
+                        current_screen = 'patterns_start'
+                    elif hardpattbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'hard'
+                        last_game_mode = 'patterns'
+                        current_screen = 'patterns_start'
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'patterns_start':
+                    if start_button.check_press(mouse_pos):
+                        if pattern_difficulty:
+                            pattern_level, pattern_sequence, pattern_correct_answer, pattern_choices, pattern_choice_buttons = start_pattern_game(pattern_difficulty, timer_font)
+                            pattern_message = 'Find the next color'
+                            score = 0
+                            current_screen = 'patterns_game'
+                    elif howtoplaypattbutton.check_press(mouse_pos):
+                        how_to_play_mode = 'patterns'
+                        current_screen = 'how_to_play'
+                    elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
                 elif current_screen == 'sequences_screen':
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
-                elif current_screen == 'how_to_play':
+                elif current_screen == 'patterns_game':
                     if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
+                    for button in pattern_choice_buttons:
+                        if button.check_press(mouse_pos):
+                            if button.label == pattern_correct_answer:
+                                score += 1
+                                pattern_level += 1
+                                pattern_sequence, pattern_correct_answer = generate_pattern(pattern_level, pattern_difficulty)
+                                pattern_choices = build_choices(pattern_correct_answer, pattern_difficulty)
+                                pattern_choice_buttons = create_choice_buttons(pattern_choices, timer_font)
+                                pattern_message = 'Correct! Next pattern.'
+                            else:
+                                pattern_message = f'Wrong answer. The right choice was {pattern_correct_answer}.'
+                                current_screen = 'score_screen'
+
+                elif current_screen == 'how_to_play':
+                    if homebutton.check_press(mouse_pos):
+                        if how_to_play_mode == 'patterns':
+                            current_screen = 'patterns_start'
+                        else:
+                            current_screen = 'main_menu'
 
                 elif current_screen == 'diff_start':
                     if start_button.check_press(mouse_pos):
@@ -237,7 +445,12 @@ def main():
                         timer_running = False
                         pygame.time.set_timer(timer, 0)
                     if retrybutton.check_press(mouse_pos):
-                        current_screen = 'diff_start'
+                        if last_game_mode == 'patterns':
+                            current_screen = 'patterns_start'
+                        else:
+                            current_screen = 'diff_start'
+                    if patterns_back_button.check_press(mouse_pos):
+                        current_screen = 'patterns_screen'
 
                 elif current_screen == 'game':
                     if show_changed and yes_button.check_press(mouse_pos):
@@ -334,6 +547,16 @@ def main():
             medpattbutton.update(mouse_pos)
             hardpattbutton.update(mouse_pos)
 
+        elif current_screen == 'patterns_start':
+            homebutton.update(mouse_pos)
+            start_button.update(mouse_pos)
+            howtoplaypattbutton.update(mouse_pos)
+
+        elif current_screen == 'patterns_game':
+            homebutton.update(mouse_pos)
+            for button in pattern_choice_buttons:
+                button.update(mouse_pos)
+
         elif current_screen == 'sequences_screen':
             homebutton.update(mouse_pos)
             easyseqbutton.update(mouse_pos)
@@ -354,6 +577,7 @@ def main():
         elif current_screen == 'score_screen':
             homebutton.update(mouse_pos)
             retrybutton.update(mouse_pos)
+            patterns_back_button.update(mouse_pos)
 
         menu_button.update(mouse_pos)
 
@@ -401,6 +625,14 @@ def main():
             medpattbutton.draw(screen)
             hardpattbutton.draw(screen)
 
+        elif current_screen == 'patterns_game':
+            screen.fill((255, 255, 255))
+            homebutton.draw(screen)
+            if pattern_sequence:
+                draw_pattern_sequence(screen, pattern_sequence, timer_font)
+            for button in pattern_choice_buttons:
+                button.draw(screen)
+
         elif current_screen == 'sequences_screen':
             screen.blit(seqtitle, (22, 30))
             menu_button.draw(screen)
@@ -416,9 +648,19 @@ def main():
             diff_start_howto_button.draw(screen)
             homebutton.draw(screen)
 
+        elif current_screen == 'patterns_start':
+            screen.blit(patternstitle, (22, 30))
+            menu_button.draw(screen)
+            start_button.draw(screen)
+            howtoplaypattbutton.draw(screen)
+            homebutton.draw(screen)
+
         elif current_screen == 'how_to_play':
             screen.blit(howtoplaytitle, (161, 68))
-            screen.blit(howtoplaydiff, (50, 150))
+            if how_to_play_mode == 'patterns':
+                screen.blit(howtoplaypatt, (50, 150))
+            else:
+                screen.blit(howtoplaydiff, (50, 150))
             homebutton.draw(screen)
             menu_button.draw(screen)
 
@@ -451,7 +693,6 @@ def main():
             homebutton.draw(screen)
             menu_button.draw(screen)
             retrybutton.draw(screen)
-
         
 
         if menu_open and menu_x < 0:
