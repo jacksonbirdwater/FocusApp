@@ -27,6 +27,8 @@ howtoplaydiff = pygame.transform.scale(howtoplaydiff, (400, 400))
 howtoplaypatt = pygame.image.load('images/howtoplaypatt.png')
 howtoplaypatt = pygame.transform.scale(howtoplaypatt, (400, 400))
 
+
+#images for differences game
 image1 = pygame.image.load('spot the difference images/image1.png')
 image1 = pygame.transform.scale(image1, (400, 267))
 image1changed = pygame.image.load('spot the difference images/image1changed.png')
