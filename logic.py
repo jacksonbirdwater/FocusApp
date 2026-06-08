@@ -14,6 +14,7 @@ MENU_SPEED = 20
 clock = pygame.time.Clock()
 
 timer_font = pygame.font.Font(None, 24)
+pattern_font = pygame.font.SysFont('Montserrat Thin', 24)
 pattern_text_surface = pygame.Surface((400, 29), pygame.SRCALPHA)
 pattern_text_surface.fill((0, 0, 0, 0))
 pattern_label = pattern_font.render('What comes next in this pattern?', True, (0, 0, 0))
