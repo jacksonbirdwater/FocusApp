@@ -26,6 +26,8 @@ howtoplaydiff = pygame.image.load('images/howtoplaydiff.png')
 howtoplaydiff = pygame.transform.scale(howtoplaydiff, (400, 400))
 howtoplaypatt = pygame.image.load('images/howtoplaypatt.png')
 howtoplaypatt = pygame.transform.scale(howtoplaypatt, (400, 400))
+textbg = pygame.image.load('images/text.png')
+textbg = pygame.transform.scale(textbg, (400, 29))
 
 
 #images for differences game
@@ -69,3 +71,19 @@ image10 = pygame.image.load('spot the difference images/image10.png')
 image10 = pygame.transform.scale(image10, (400, 267))
 image10changed = pygame.image.load('spot the difference images/image10changed.png')
 image10changed = pygame.transform.scale(image10changed, (400, 267))
+
+#images for patterns game
+green = pygame.image.load('patterngamecolors/circlegreen.png')
+green = pygame.transform.scale(green, (50, 50))
+red = pygame.image.load('patterngamecolors/circlered.png')
+red = pygame.transform.scale(red, (50, 50))
+purple = pygame.image.load('patterngamecolors/circlepurple.png')
+purple = pygame.transform.scale(purple, (50, 50))
+blue = pygame.image.load('patterngamecolors/circleblue.png')
+blue = pygame.transform.scale(blue, (50, 50))
+cyan = pygame.image.load('patterngamecolors/circlecyan.png')
+cyan = pygame.transform.scale(cyan, (50, 50))
+yellow = pygame.image.load('patterngamecolors/circleyellow.png')
+yellow = pygame.transform.scale(yellow, (50, 50))
+orange = pygame.image.load('patterngamecolors/circleorange.png')
+orange = pygame.transform.scale(orange, (50, 50))
