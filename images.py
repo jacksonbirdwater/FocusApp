@@ -28,6 +28,8 @@ howtoplaypatt = pygame.image.load('images/howtoplaypatt.png')
 howtoplaypatt = pygame.transform.scale(howtoplaypatt, (400, 400))
 textbg = pygame.image.load('images/text.png')
 textbg = pygame.transform.scale(textbg, (400, 29))
+sunnyedmonds = pygame.image.load('images/sunny edmonds.png')
+sunnyedmonds = pygame.transform.scale(sunnyedmonds, (83, 12))
 
 
 #images for differences game

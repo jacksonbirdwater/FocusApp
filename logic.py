@@ -39,6 +39,7 @@ patternstitle = images.patternstitle
 seqtitle = images.seqtitle
 howtoplaytitle = images.howtoplaytitle
 howtoplaydiff = images.howtoplaydiff
+sunnyedmonds = images.sunnyedmonds
 howtoplaypatt = images.howtoplaypatt
 image1 = images.image1
 image1changed = images.image1changed
@@ -582,6 +583,7 @@ def main():
             exit_button.draw(screen)
             select_puzzle_button.draw(screen)
             menu_button.draw(screen)
+            screen.blit(sunnyedmonds, (417, 635))
 
         elif current_screen == 'select_puzzle':
             screen.blit(bgdoodles, (0, 0))
