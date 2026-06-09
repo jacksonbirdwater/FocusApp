@@ -21,6 +21,13 @@ pattern_label = pattern_font.render('What comes next in this pattern?', True, (0
 pattern_label_rect = pattern_label.get_rect(center=(200, 14))
 pattern_text_surface.blit(pattern_label, pattern_label_rect)
 
+difference_font = pygame.font.SysFont('Montserrat Thin', 32)
+difference_text_surface = pygame.Surface((397, 39), pygame.SRCALPHA)
+difference_text_surface.fill((0, 0, 0, 0))
+difference_label = difference_font.render('Find the differences!', True, (0, 0, 0))
+difference_label_rect = difference_label.get_rect(center=(198.5, 19.5))
+difference_text_surface.blit(difference_label, difference_label_rect)
+
 timer_sec = 0
 timer_text = timer_font.render("00:00", True, (0, 0, 0))
 timer_running = False
@@ -41,6 +48,7 @@ howtoplaytitle = images.howtoplaytitle
 howtoplaydiff = images.howtoplaydiff
 sunnyedmonds = images.sunnyedmonds
 howtoplaypatt = images.howtoplaypatt
+imagechange = images.imagechange
 image1 = images.image1
 image1changed = images.image1changed
 image2 = images.image2
@@ -218,7 +226,9 @@ def main():
     yes_button = Button((62, 500), (150, 60), 'yes.png')
     no_button = Button((277, 500), (150, 60), 'no.png')
 
-    retrybutton = Button((144, 418), (212, 60), 'retrybutton.png')
+    retrybuttondiff = Button((144, 418), (212, 60), 'retrybutton.png')
+    retrybuttonpatt = Button((144, 418), (212, 60), 'retrybutton.png')
+    retrybuttonseq = Button((144, 418), (212, 60), 'retrybutton.png')
     patterns_back_button = Button((344, 418), (120, 60), 'patterns.png')
     howtoplaypattbutton = Button((139, 432), (221, 65), 'howtoplaypattbutton.png')
 
@@ -386,7 +396,7 @@ def main():
                         timer_running = False
                         pygame.time.set_timer(timer, 0)
 
-                    if retrybutton.check_press(mouse_pos):
+                    if retrybuttonpatt.check_press(mouse_pos):
                         if last_game_mode == 'patterns':
                             current_screen = 'patterns_start'
                         else:
@@ -564,7 +574,7 @@ def main():
 
         elif current_screen == 'score_screen':
             homebutton.update(mouse_pos)
-            retrybutton.update(mouse_pos)
+            retrybuttonpatt.update(mouse_pos)
             patterns_back_button.update(mouse_pos)
 
         menu_button.update(mouse_pos)
@@ -677,6 +687,8 @@ def main():
 
         elif current_screen == 'game':
             screen.fill((255, 255, 255))
+            diff_rect = difference_text_surface.get_rect(center=(248.5, 122))
+            screen.blit(difference_text_surface, diff_rect)
 
             if flashing:
                 screen.fill((255, 255, 255))
@@ -701,10 +713,10 @@ def main():
         elif current_screen == 'score_screen':
             screen.fill((255, 255, 255))
             score_text = timer_font.render(f"Your score: {score}", True, (0, 0, 0))
-            screen.blit(score_text, (176, 252))
+            screen.blit(score_text, (200, 252))
             homebutton.draw(screen)
             menu_button.draw(screen)
-            retrybutton.draw(screen)
+            retrybuttonpatt.draw(screen)
 
         
 
