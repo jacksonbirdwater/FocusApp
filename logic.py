@@ -167,6 +167,25 @@ def generate_pattern(difficulty):
 def get_color_image(color):
     return getattr(images, color)
 
+def draw_sequence(surface, sequence, font):
+    """Render the sequence of numbers for the sequence game."""
+    start_x = 80
+    y = 220
+    spacing = 70
+
+    for idx, value in enumerate(sequence):
+        if idx == len(sequence) - 1:
+            display_text = '?'
+        else:
+            display_text = str(value)
+
+        text_surface = font.render(display_text, True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(start_x + idx * spacing, y))
+        pygame.draw.rect(surface, (240, 240, 240), text_rect.inflate(20, 20))
+        pygame.draw.rect(surface, (200, 200, 200), text_rect.inflate(20, 20), 2)
+        surface.blit(text_surface, text_rect)
+
+
 def main():
     """Main game loop and state setup."""
     global timer_sec, timer_running
@@ -762,6 +781,9 @@ def main():
 
             pattern_y = 250
             start_x = 110
+            if pattern_difficulty == 'hard':
+                start_x = 80
+
             spacing = 70
             for idx, color in enumerate(pattern_sequence):
                 x = start_x + idx * spacing
