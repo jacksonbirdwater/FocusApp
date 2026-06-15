@@ -91,3 +91,34 @@ yellow = pygame.image.load('patterngamecolors/circleyellow.png')
 yellow = pygame.transform.scale(yellow, (50, 50))
 orange = pygame.image.load('patterngamecolors/circleorange.png')
 orange = pygame.transform.scale(orange, (50, 50))
+
+# placeholder sequence tiles for the Simon-style sequence game
+sequence_tiles = []
+sequence_tiles_lit = []
+sequence_tile_font = pygame.font.SysFont(None, 40)
+sequence_colors = [
+    (200, 75, 75),
+    (75, 200, 75),
+    (75, 75, 200),
+    (200, 200, 75),
+    (200, 75, 200),
+    (75, 200, 200),
+    (160, 90, 20),
+    (100, 100, 100),
+]
+for index, color in enumerate(sequence_colors, start=1):
+    tile = pygame.Surface((100, 100))
+    tile.fill((230, 230, 230))
+    pygame.draw.rect(tile, (100, 100, 100), tile.get_rect(), 3)
+    label = sequence_tile_font.render(str(index), True, (30, 30, 30))
+    label_rect = label.get_rect(center=tile.get_rect().center)
+    tile.blit(label, label_rect)
+    sequence_tiles.append(tile)
+
+    lit_tile = pygame.Surface((100, 100))
+    lit_tile.fill(color)
+    pygame.draw.rect(lit_tile, (255, 255, 255), lit_tile.get_rect(), 3)
+    lit_label = sequence_tile_font.render(str(index), True, (255, 255, 255))
+    lit_label_rect = lit_label.get_rect(center=lit_tile.get_rect().center)
+    lit_tile.blit(lit_label, lit_label_rect)
+    sequence_tiles_lit.append(lit_tile)

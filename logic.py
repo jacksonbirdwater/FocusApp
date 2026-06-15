@@ -124,6 +124,79 @@ class ExitButton(Button):
             pygame.quit()
             sys.exit()
 
+
+class ImageButton:
+    """Button wrapper for image tiles with lit and normal states."""
+    def __init__(self, position, image, lit_image=None):
+        self.normal_image = image
+        self.lit_image = lit_image if lit_image is not None else image
+        self.current_image = self.normal_image
+        self.rect = self.normal_image.get_rect(topleft=position)
+        self.hovered = False
+        self.lit = False
+
+    def update(self, mouse_pos):
+        self.hovered = self.rect.collidepoint(mouse_pos)
+
+    def draw(self, surface):
+        surface.blit(self.current_image, self.rect)
+
+    def set_lit(self, lit):
+        self.lit = lit
+        self.current_image = self.lit_image if lit else self.normal_image
+
+    def check_press(self, position):
+        return self.rect.collidepoint(position)
+
+
+def create_sequence_buttons():
+    buttons = []
+    rows = 2
+    cols = 4
+    button_size = (100, 100)
+    padding_x = 20
+    padding_y = 20
+    total_width = cols * button_size[0] + (cols - 1) * padding_x
+    start_x = (WIDTH - total_width) // 2
+    start_y = 200
+
+    for row in range(rows):
+        for col in range(cols):
+            index = row * cols + col
+            x = start_x + col * (button_size[0] + padding_x)
+            y = start_y + row * (button_size[1] + padding_y)
+            button = ImageButton((x, y), images.sequence_tiles[index], images.sequence_tiles_lit[index])
+            buttons.append(button)
+
+    return buttons
+
+
+def start_sequence_game(difficulty):
+    sequence_order = [random.randrange(8)]
+    sequence_buttons = create_sequence_buttons()
+    sequence_level = 1
+    sequence_displaying = True
+    sequence_display_index = 0
+    sequence_lit_button = None
+    sequence_last_change = pygame.time.get_ticks()
+    player_index = 0
+    sequence_message = 'Watch the pattern'
+    score = 0
+
+    return (
+        sequence_order,
+        sequence_buttons,
+        sequence_level,
+        sequence_displaying,
+        sequence_display_index,
+        sequence_lit_button,
+        sequence_last_change,
+        player_index,
+        sequence_message,
+        score,
+    )
+
+
 def generate_pattern(difficulty):
     colors = ['blue', 'red', 'green', 'orange', 'purple', 'yellow', 'cyan']
 
@@ -224,8 +297,15 @@ def main():
     pattern_sequence = []
     expected_color = None
 
-    pattern_sequence = []
-    expected_color = None
+    sequence_order = []
+    sequence_buttons = []
+    sequence_displaying = False
+    sequence_display_index = 0
+    sequence_lit_button = None
+    sequence_last_change = 0
+    player_index = 0
+    sequence_level = 0
+    sequence_message = ''
 
     # pattern game state
     pattern_difficulty = None
@@ -433,11 +513,52 @@ def main():
                 elif current_screen == 'sequences_start':
                     if start_button.check_press(mouse_pos):
                         if sequence_difficulty:
-                            sequence_level, sequence_sequence, sequence_correct_answer, sequence_choices, sequence_choice_buttons = start_sequence_game(sequence_difficulty, timer_font)
-                            sequence_message = 'Find the next number'
-                            score = 0
+                            (
+                                sequence_order,
+                                sequence_buttons,
+                                sequence_level,
+                                sequence_displaying,
+                                sequence_display_index,
+                                sequence_lit_button,
+                                sequence_last_change,
+                                player_index,
+                                sequence_message,
+                                score,
+                            ) = start_sequence_game(sequence_difficulty)
                             current_screen = 'sequences_game'
                     elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'sequences_game':
+                    if not sequence_displaying and sequence_buttons:
+                        clicked_index = None
+                        for idx, button in enumerate(sequence_buttons):
+                            if button.check_press(mouse_pos):
+                                clicked_index = idx
+                                break
+
+                        if clicked_index is not None:
+                            sequence_buttons[clicked_index].set_lit(True)
+                            sequence_lit_button = clicked_index
+                            sequence_last_change = pygame.time.get_ticks()
+
+                            if clicked_index == sequence_order[player_index]:
+                                score += 1
+                                player_index += 1
+                                if player_index >= len(sequence_order):
+                                    sequence_level += 1
+                                    sequence_order.append(random.randrange(8))
+                                    sequence_displaying = True
+                                    sequence_display_index = 0
+                                    sequence_message = 'Watch the pattern'
+                                    player_index = 0
+                                    sequence_last_change = pygame.time.get_ticks()
+                            else:
+                                current_screen = 'score_screen'
+                                timer_running = False
+                                pygame.time.set_timer(timer, 0)
+
+                    if homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
                 elif current_screen == 'how_to_play':
@@ -606,6 +727,27 @@ def main():
                 show_changed = True
                 flashing = False
 
+        if current_screen == 'sequences_game':
+            now = pygame.time.get_ticks()
+
+            if sequence_lit_button is not None and now - sequence_last_change >= 300:
+                sequence_buttons[sequence_lit_button].set_lit(False)
+                sequence_lit_button = None
+                sequence_last_change = now
+
+            if sequence_displaying and sequence_lit_button is None and now - sequence_last_change >= 200:
+                if sequence_display_index < len(sequence_order):
+                    next_index = sequence_order[sequence_display_index]
+                    sequence_buttons[next_index].set_lit(True)
+                    sequence_lit_button = next_index
+                    sequence_display_index += 1
+                    sequence_last_change = now
+                else:
+                    sequence_displaying = False
+                    player_index = 0
+                    sequence_message = 'Repeat the pattern'
+                    sequence_last_change = now
+
         # format the timer display each frame
         mins = timer_sec // 60
         secs = timer_sec % 60
@@ -655,7 +797,7 @@ def main():
 
         elif current_screen == 'sequences_game':
             homebutton.update(mouse_pos)
-            for button in sequence_choice_buttons:
+            for button in sequence_buttons:
                 button.update(mouse_pos)
 
         elif current_screen == 'diff_start':
@@ -755,9 +897,13 @@ def main():
             screen.blit(message_text, (40, 130))
             homebutton.draw(screen)
             menu_button.draw(screen)
-            draw_sequence(screen, sequence_sequence, timer_font)
-            for button in sequence_choice_buttons:
-                button.draw(screen)
+
+            if sequence_buttons:
+                for button in sequence_buttons:
+                    button.draw(screen)
+
+            score_text = timer_font.render(f'Score: {score}', True, (0, 0, 0))
+            screen.blit(score_text, (360, 100))
 
         elif current_screen == 'diff_start':
             screen.blit(difftitle, (22, 73))
