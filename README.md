@@ -18,3 +18,9 @@ if the above fails run
 
 VERIFY THE INSTALLATION 
 - python -m pygame.examples.aliens
+
+# Extras
+
+INSTALL FONT
+Montserrat Thin 
+https://fonts.google.com/specimen/Montserrat
