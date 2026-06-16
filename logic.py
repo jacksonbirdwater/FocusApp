@@ -265,7 +265,9 @@ def main():
                     if current_screen == 'game':
                         current_screen = 'score_screen'
                     elif current_screen == 'patterns_game':
-                        current_screen = 'patterns_start'
+                        current_screen = 'score_screen'
+                    elif current_screen == 'sequences_game':
+                        current_screen = 'score_screen'
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
@@ -346,7 +348,39 @@ def main():
                         current_screen = 'main_menu'
 
                 elif current_screen == 'sequences_screen':
-                    if homebutton.check_press(mouse_pos):
+                    if easyseqbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'easy'
+                        last_game_mode = 'sequences'
+                        current_screen = 'sequences_start'
+                    elif medseqbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'medium'
+                        last_game_mode = 'sequences'
+                        current_screen = 'sequences_start'
+                    elif hardseqbutton.check_press(mouse_pos):
+                        pattern_difficulty = 'hard'
+                        last_game_mode = 'sequences'
+                        current_screen = 'sequences_start'
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+
+                elif current_screen == 'sequences_start':
+                    if start_button.check_press(mouse_pos):
+                        if pattern_difficulty:
+                            if pattern_difficulty == 'easy':
+                                timer_sec = 120
+                            elif pattern_difficulty == 'medium':
+                                timer_sec = 90
+                            else:
+                                timer_sec = 60
+
+                            initial_time = timer_sec
+                            timer_running = True
+                            pygame.time.set_timer(timer, 1000)
+                            score = 0
+                            pattern_sequence = generate_pattern(pattern_difficulty)
+                            expected_color = pattern_sequence[-1]
+                            current_screen = 'sequences_game'
+                    elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
 
                 elif current_screen == 'how_to_play':
@@ -399,10 +433,17 @@ def main():
                     if retrybuttonpatt.check_press(mouse_pos):
                         if last_game_mode == 'patterns':
                             current_screen = 'patterns_start'
+                        elif last_game_mode == 'sequences':
+                            current_screen = 'sequences_start'
                         else:
                             current_screen = 'diff_start'
                     if patterns_back_button.check_press(mouse_pos):
-                        current_screen = 'patterns_screen'
+                        if last_game_mode == 'patterns':
+                            current_screen = 'patterns_screen'
+                        elif last_game_mode == 'sequences':
+                            current_screen = 'sequences_screen'
+                        else:
+                            current_screen = 'select_puzzle'
 
                 elif current_screen == 'game':
                     if show_changed and yes_button.check_press(mouse_pos):
@@ -473,9 +514,42 @@ def main():
                             pattern_sequence = generate_pattern(pattern_difficulty)
                             expected_color = pattern_sequence[-1]
                         else:
-                            current_screen = 'score_screen'
-                            timer_running = False
-                            pygame.time.set_timer(timer, 0)
+                            score -= 1
+                            if score < 0:
+                                score = 0
+
+                    elif homebutton.check_press(mouse_pos):
+                        current_screen = 'main_menu'
+                        timer_running = False
+                        pygame.time.set_timer(timer, 0)
+
+                elif current_screen == 'sequences_game':
+                    selected_color = None
+
+                    if bluebutton.check_press(mouse_pos):
+                        selected_color = 'blue'
+                    elif cyanbutton.check_press(mouse_pos):
+                        selected_color = 'cyan'
+                    elif greenbutton.check_press(mouse_pos):
+                        selected_color = 'green'
+                    elif orangebutton.check_press(mouse_pos):
+                        selected_color = 'orange'
+                    elif purplebutton.check_press(mouse_pos):
+                        selected_color = 'purple'
+                    elif yellowbutton.check_press(mouse_pos):
+                        selected_color = 'yellow'
+                    elif redbutton.check_press(mouse_pos):
+                        selected_color = 'red'
+
+                    if selected_color:
+                        if selected_color == expected_color:
+                            score += 1
+                            pattern_sequence = generate_pattern(pattern_difficulty)
+                            expected_color = pattern_sequence[-1]
+                        else:
+                            score -= 1
+                            if score < 0:
+                                score = 0
 
                     elif homebutton.check_press(mouse_pos):
                         current_screen = 'main_menu'
@@ -551,6 +625,10 @@ def main():
             medseqbutton.update(mouse_pos)
             hardseqbutton.update(mouse_pos)
 
+        elif current_screen == 'sequences_start':
+            homebutton.update(mouse_pos)
+            start_button.update(mouse_pos)
+
         elif current_screen == 'diff_start':
             start_button.update(mouse_pos)
             diff_start_howto_button.update(mouse_pos)
@@ -563,6 +641,16 @@ def main():
                 no_button.update(mouse_pos)
 
         elif current_screen == 'patterns_game':
+            homebutton.update(mouse_pos)
+            bluebutton.update(mouse_pos)
+            cyanbutton.update(mouse_pos)
+            greenbutton.update(mouse_pos)
+            orangebutton.update(mouse_pos)
+            purplebutton.update(mouse_pos)
+            yellowbutton.update(mouse_pos)
+            redbutton.update(mouse_pos)
+
+        elif current_screen == 'sequences_game':
             homebutton.update(mouse_pos)
             bluebutton.update(mouse_pos)
             cyanbutton.update(mouse_pos)
@@ -647,10 +735,53 @@ def main():
             howtoplaypattbutton.draw(screen)
             homebutton.draw(screen)
 
+        elif current_screen == 'sequences_start':
+            screen.blit(seqtitle, (22, 30))
+            menu_button.draw(screen)
+            start_button.draw(screen)
+            homebutton.draw(screen)
+
         elif current_screen == 'patterns_game':
             screen.fill((255, 255, 255))
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
+            
+            score_text = timer_font.render(f"Score: {score}", True, (0, 0, 0))
+            screen.blit(score_text, (10, 35))
+            
+            screen.blit(pattern_text_surface, (50, 161))
+
+            pattern_y = 250
+            start_x = 110
+            spacing = 70
+            for idx, color in enumerate(pattern_sequence):
+                x = start_x + idx * spacing
+                if idx == len(pattern_sequence) - 1:
+                    pygame.draw.circle(screen, (220, 220, 220), (x, pattern_y), 25)
+                    pygame.draw.circle(screen, (160, 160, 160), (x, pattern_y), 20, 2)
+                else:
+                    color_img = get_color_image(color)
+                    color_rect = color_img.get_rect(center=(x, pattern_y))
+                    screen.blit(color_img, color_rect)
+
+            bluebutton.draw(screen)
+            cyanbutton.draw(screen)
+            greenbutton.draw(screen)
+            orangebutton.draw(screen)
+            purplebutton.draw(screen)
+            yellowbutton.draw(screen)
+            redbutton.draw(screen)
+            homebutton.draw(screen)
+            menu_button.draw(screen)
+
+        elif current_screen == 'sequences_game':
+            screen.fill((255, 255, 255))
+            timer_rect = timer_text.get_rect(center=(248, 35))
+            screen.blit(timer_text, timer_rect)
+            
+            score_text = timer_font.render(f"Score: {score}", True, (0, 0, 0))
+            screen.blit(score_text, (10, 35))
+            
             screen.blit(pattern_text_surface, (50, 161))
 
             pattern_y = 250
@@ -702,6 +833,9 @@ def main():
 
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
+
+            score_text = timer_font.render(f"Score: {score}", True, (0, 0, 0))
+            screen.blit(score_text, (10, 35))
 
             homebutton.draw(screen)
             menu_button.draw(screen)
