@@ -118,7 +118,7 @@ class SequenceGame:
                     self.lit_tile = idx
                     self.playback_index += 1
                     self.last_event_time = now
-                    # placeholder: self.sounds[idx].play()
+                    self.sounds[idx].play()
                 else:
                     # finished showing the sequence
                     self.state = 'input'
@@ -148,7 +148,7 @@ class SequenceGame:
                 else:
                     # wrong tile
                     self.message = 'Wrong!'
-                    # placeholder: self.fail_sound.play()
+                    self.fail_sound.play()
                     self.state = 'over'
                     return 'score_screen'
                 break
