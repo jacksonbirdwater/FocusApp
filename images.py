@@ -34,6 +34,7 @@ imagechange = pygame.image.load('assets/images/imagechange.png')
 imagechange = pygame.transform.scale(imagechange, (397, 39))
 
 
+
 #images for differences game
 image1 = pygame.image.load('assets/images/image1.png')
 image1 = pygame.transform.scale(image1, (400, 267))

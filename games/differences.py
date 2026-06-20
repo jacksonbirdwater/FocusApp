@@ -4,18 +4,6 @@ import images
 
 
 class DifferenceGame:
-    """
-    Manages all state and logic for the spot-the-difference game.
-
-    Flow per puzzle:
-      1. Show the base image for `game_timer` seconds.
-      2. Flash white briefly.
-      3. Randomly decide to show the changed or unchanged image.
-      4. Player presses Yes (changed) or No (same).
-      5. Correct → score + time bonus, advance puzzle.
-         Wrong   → game over.
-      6. After all puzzles → signal 'score_screen'.
-    """
 
     DIFFICULTY_TIMES = {
         'easy': 45,
@@ -39,22 +27,19 @@ class DifferenceGame:
         self.difficulty = difficulty
         self.score = 0
 
-        # timer is managed externally (main.py owns timer_sec),
-        # but we own the per-puzzle countdown and flash state.
         self.initial_time = self.DIFFICULTY_TIMES[difficulty]
 
         self.puzzles = self.PUZZLE_NAMES[:]
         random.shuffle(self.puzzles)
         self.current_puzzle = 0
 
-        self.game_timer = self.PREVIEW_SECONDS   # seconds until reveal
-        self.show_changed = False                # True once reveal is shown
-        self.puzzle_is_changed = False           # whether this puzzle is the changed variant
+        self.game_timer = self.PREVIEW_SECONDS
+        self.show_changed = False
+        self.puzzle_is_changed = False
 
         self.flashing = False
         self.flash_start = 0
 
-        # load the first image
         self._load_current_image()
 
     # public helpers queried by main.py
@@ -63,14 +48,16 @@ class DifferenceGame:
     def done(self):
         return self.current_puzzle >= len(self.puzzles)
 
+    @property
+    def label(self):
+        """Text displayed above the image — changes after the reveal flash."""
+        if self.show_changed:
+            return 'Has the scene changed?'
+        return f'Memorise the scene: {self.game_timer}'
+
     # called once per second by main.py's timer event
 
     def tick(self):
-        """
-        Advance the per-puzzle preview countdown by one second.
-        Returns True if the flash should begin (caller should NOT also
-        decrement timer_sec for game logic — that's still main.py's job).
-        """
         if self.show_changed or self.flashing:
             return False
 
@@ -81,7 +68,6 @@ class DifferenceGame:
         return False
 
     # called every frame by main.py
- 
 
     def update(self):
         """Resolve the flash and switch to the reveal image when ready."""
@@ -91,8 +77,6 @@ class DifferenceGame:
 
     # called when the player presses Yes or No
     # returns (correct: bool, bonus_seconds: int, signal: str | None)
-    #   signal is 'score_screen' when the game should end, else None
-  
 
     def answer(self, player_says_changed):
         correct = player_says_changed == self.puzzle_is_changed
@@ -104,7 +88,6 @@ class DifferenceGame:
             if self.done:
                 return True, 0, 'score_screen'
 
-            # advance to next puzzle
             self.game_timer = self.PREVIEW_SECONDS
             self.show_changed = False
             self._load_current_image()
@@ -113,9 +96,7 @@ class DifferenceGame:
         else:
             return False, 0, 'score_screen'
 
- 
     # drawing
-    
 
     def draw(self, surface, width, height):
         if self.flashing:
@@ -129,9 +110,7 @@ class DifferenceGame:
             img_y = (height - img_h) // 2
             surface.blit(self.current_image, (img_x, img_y))
 
- 
     # private
-
 
     def _load_current_image(self):
         if not self.done:

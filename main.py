@@ -1,5 +1,7 @@
 import pygame
 pygame.init()
+pygame.mixer.music.load('assets/audio/music1.mp3')
+pygame.mixer.music.play(-1)  
 
 import images
 import sys
@@ -7,6 +9,11 @@ from ui.button import Button, ExitButton
 from games.patterns import PatternGame
 from games.sequences import SequenceGame
 from games.differences import DifferenceGame
+from ui.slider import Slider
+from data.stats import load as load_stats, record as record_stats
+
+
+slider = Slider(position=(30, 620), width=200, initial_volume=0.5)
 
 #window / constants
 WIDTH = images.WIDTH
@@ -17,6 +24,9 @@ MENU_WIDTH = 169
 MENU_HEIGHT = HEIGHT
 MENU_SPEED = 20
 clock = pygame.time.Clock()
+
+
+
 
 #fonts & static label surfaces
 
@@ -29,10 +39,6 @@ pattern_label = pattern_font.render('What comes next in this pattern?', True, (0
 pattern_text_surface.blit(pattern_label, pattern_label.get_rect(center=(200, 14)))
 
 difference_font = pygame.font.SysFont('Montserrat Thin', 32)
-difference_text_surface = pygame.Surface((397, 39), pygame.SRCALPHA)
-difference_text_surface.fill((0, 0, 0, 0))
-difference_label = difference_font.render('Find the differences!', True, (0, 0, 0))
-difference_text_surface.blit(difference_label, difference_label.get_rect(center=(198.5, 19.5)))
 
 
 #global countdown timer (counts down every second via USEREVENT+1)
@@ -94,27 +100,30 @@ def main():
 
     #screen state
     current_screen = 'main_menu'
-    selected_difficulty = None      # shared across diff / patterns / sequences
-    last_game_mode = None           # 'differences' | 'patterns' | 'sequences'
-    how_to_play_mode = None         # 'patterns' | 'diff'
+    selected_difficulty = None
+    last_game_mode = None
+    how_to_play_mode = NotImplementedError
 
     #game objects (created on start)
     diff_game: DifferenceGame | None = None
     pattern_game: PatternGame | None = None
     sequence_game: SequenceGame | None = None
 
+    stats = load_stats()
+
 
     #button definitions
 
-    # -- navigation --
+    #navigation
     menu_button          = Button((18, 18),   (24, 24),   'menu.png')
     homebutton           = Button((455, 18),  (24, 24),   'backhome.png')
     back_home_button     = Button((3, 88),    (94, 24),   'account.png')
     account_button       = Button((3, 88),    (94, 24),   'account.png')
     howto_button         = Button((3, 163),   (115, 20),  'howtoplay.png')
     exit_button          = ExitButton((139, 424), (221, 65), 'exitButton.png')
+    account_back_button  = Button((139, 560), (221, 65), 'homebuttonpost.png')
 
-    #   main menu
+    #main menu
     select_puzzle_button = Button((139, 270), (221, 65),  'selectPuzzleButton.png')
 
     #game mode selection
@@ -147,10 +156,10 @@ def main():
     no_button            = Button((277, 500), (150, 60),  'no.png')
 
     #score screen
-    retrybuttondiff      = Button((144, 418), (212, 60),  'retrybutton.png')
-    retrybuttonpatt      = Button((144, 418), (212, 60),  'retrybutton.png')
-    retrybuttonseq       = Button((144, 418), (212, 60),  'retrybutton.png')
-    patterns_back_button = Button((344, 418), (120, 60),  'patterns.png')
+    retrybuttondiff      = Button((35, 413), (212, 60),  'retrybutton.png')
+    retrybuttonpatt      = Button((35, 413), (212, 60),  'retrybutton.png')
+    retrybuttonseq       = Button((35, 413), (212, 60),  'retrybutton.png')
+    patterns_back_button = Button((267, 413), (212, 60),  'homebuttonpost.png')
 
     #pattern colour buttons
     bluebutton   = Button((80,  407), (80, 80), 'patternbuttonblue.png')
@@ -192,6 +201,10 @@ def main():
         #collect events for games that need the full list
         events = pygame.event.get()
 
+        # handle slider events
+        for event in events:
+            slider.handle_event(event)
+
         for event in events:
 
             if event.type == pygame.QUIT:
@@ -208,6 +221,8 @@ def main():
                 if timer_sec <= 0:
                     timer_sec = 0
                     stop_timer()
+                    if last_game_mode:
+                        record_stats(stats, last_game_mode, final_score())
                     current_screen = 'score_screen'
 
             #mouse clicks
@@ -287,12 +302,14 @@ def main():
                             timer_sec += bonus
                             if signal:
                                 stop_timer()
+                                record_stats(stats, 'differences', diff_game.score)
                                 current_screen = signal
                         elif no_button.check_press(pos):
                             _, bonus, signal = diff_game.answer(player_says_changed=False)
                             timer_sec += bonus
                             if signal:
                                 stop_timer()
+                                record_stats(stats, 'differences', diff_game.score)
                                 current_screen = signal
 
                 #patterns
@@ -375,8 +392,8 @@ def main():
                         current_screen = 'patterns_start' if how_to_play_mode == 'patterns' else 'main_menu'
 
                 elif current_screen == 'account_page':
-                    if exit_button.check_press(pos):
-                        pass  #exitButton handles exit
+                    if account_back_button.check_press(pos):
+                        current_screen = 'main_menu'
 
                 elif current_screen == 'score_screen':
                     if homebutton.check_press(pos):
@@ -406,6 +423,7 @@ def main():
             signal = sequence_game.update(events)
             if signal == 'score_screen':
                 stop_timer()
+                record_stats(stats, 'sequences', sequence_game.score)
                 current_screen = 'score_screen'
 
         #timer display
@@ -467,12 +485,13 @@ def main():
             retrybuttonpatt.update(mouse_pos)
             patterns_back_button.update(mouse_pos)
         elif current_screen == 'account_page':
-            exit_button.update(mouse_pos)
+            account_back_button.update(mouse_pos)
 
         if menu_open and menu_x > -MENU_WIDTH:
             account_button.update(mouse_pos)
             howto_button.update(mouse_pos)
             back_home_button.update(mouse_pos)
+
         # drawing
         screen.fill((255, 255, 255))
 
@@ -482,6 +501,7 @@ def main():
             select_puzzle_button.draw(screen)
             exit_button.draw(screen)
             menu_button.draw(screen)
+            slider.draw(screen)
             screen.blit(sunnyedmonds, (417, 635))
 
         elif current_screen == 'select_puzzle':
@@ -494,8 +514,75 @@ def main():
             menu_button.draw(screen)
 
         elif current_screen == 'account_page':
-            screen.blit(welcomuser, (21, 61))
-            exit_button.draw(screen)
+            # background
+            screen.fill((255, 255, 255))
+
+            # friendly header
+            title_font  = pygame.font.SysFont('Montserrat Thin', 28, bold=True)
+            sub_font    = pygame.font.SysFont('Montserrat Thin', 18)
+            label_font  = pygame.font.SysFont('Montserrat Thin', 14, bold=True)
+            value_font  = pygame.font.SysFont('Montserrat Thin', 22)
+
+            title_surf = title_font.render('My Stats', True, (50, 50, 50))
+            screen.blit(title_surf, title_surf.get_rect(center=(WIDTH // 2, 55)))
+
+            welcome_surf = sub_font.render('Here\'s how you\'re getting on!', True, (130, 130, 130))
+            screen.blit(welcome_surf, welcome_surf.get_rect(center=(WIDTH // 2, 85)))
+
+            # card colours per mode
+            card_colours = {
+                'differences': (255, 220, 180),   # warm orange
+                'patterns':    (180, 230, 200),   # soft green
+                'sequences':   (180, 210, 255),   # sky blue
+            }
+            icon_labels = {
+                'differences': 'Differences',
+                'patterns':    'Patterns',
+                'sequences':   'Sequences',
+            }
+
+            card_x      = 30
+            card_w      = WIDTH - 60
+            card_h      = 120
+            card_radius = 18
+            start_y     = 115
+
+            for i, mode in enumerate(['differences', 'patterns', 'sequences']):
+                hs  = stats[mode]['high_score']
+                gp  = stats[mode]['games_played']
+                cy  = start_y + i * (card_h + 14)
+                col = card_colours[mode]
+
+                # card shadow
+                shadow_rect = pygame.Rect(card_x + 3, cy + 4, card_w, card_h)
+                pygame.draw.rect(screen, (200, 200, 200), shadow_rect, border_radius=card_radius)
+
+                # card body
+                card_rect = pygame.Rect(card_x, cy, card_w, card_h)
+                pygame.draw.rect(screen, col, card_rect, border_radius=card_radius)
+                pygame.draw.rect(screen, (255, 255, 255), card_rect, 2, border_radius=card_radius)
+
+                # mode title
+                mode_surf = label_font.render(icon_labels[mode], True, (60, 60, 60))
+                screen.blit(mode_surf, (card_x + 18, cy + 16))
+
+                # divider line
+                pygame.draw.line(screen, (255, 255, 255),
+                                 (card_x + 18, cy + 40),
+                                 (card_x + card_w - 18, cy + 40), 1)
+
+                # stats row
+                hs_label  = sub_font.render('Best Score', True, (90, 90, 90))
+                hs_value  = value_font.render(str(hs), True, (40, 40, 40))
+                gp_label  = sub_font.render('Games Played', True, (90, 90, 90))
+                gp_value  = value_font.render(str(gp), True, (40, 40, 40))
+
+                screen.blit(hs_label,  (card_x + 18,        cy + 52))
+                screen.blit(hs_value,  (card_x + 18,        cy + 72))
+                screen.blit(gp_label,  (card_x + card_w // 2 + 10, cy + 52))
+                screen.blit(gp_value,  (card_x + card_w // 2 + 10, cy + 72))
+
+            account_back_button.draw(screen)
             menu_button.draw(screen)
 
         elif current_screen == 'diff_difficulty':
@@ -514,13 +601,13 @@ def main():
             menu_button.draw(screen)
 
         elif current_screen == 'diff_game':
-            diff_rect = difference_text_surface.get_rect(center=(248.5, 122))
-            screen.blit(difference_text_surface, diff_rect)
             if diff_game:
+                label_surf = difference_font.render(diff_game.label, True, (0, 0, 0))
+                label_rect = label_surf.get_rect(center=(WIDTH // 2, 122))
+                screen.blit(label_surf, label_rect)
                 diff_game.draw(screen, WIDTH, HEIGHT)
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
-            timer_font = pygame.font.SysFont('Montserrat Thin', 24)
             score_text = timer_font.render(f'Score: {diff_game.score if diff_game else 0}', True, (0, 0, 0))
             screen.blit(score_text, (10, 35))
             homebutton.draw(screen)
@@ -547,7 +634,6 @@ def main():
         elif current_screen == 'patterns_game':
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
-            timer_font = pygame.font.SysFont('Montserrat Thin', 24) 
             score_text = timer_font.render(f'Score: {pattern_game.score if pattern_game else 0}', True, (0, 0, 0))
             screen.blit(score_text, (10, 35))
             screen.blit(pattern_text_surface, (50, 161))
@@ -587,7 +673,6 @@ def main():
         elif current_screen == 'sequences_game':
             timer_rect = timer_text.get_rect(center=(248, 35))
             screen.blit(timer_text, timer_rect)
-            timer_font = pygame.font.SysFont('Montserrat Thin', 24)
             score_text = timer_font.render(f'Score: {sequence_game.score if sequence_game else 0}', True, (0, 0, 0))
             screen.blit(score_text, (10, 85))
             if sequence_game:
@@ -615,9 +700,7 @@ def main():
             patterns_back_button.draw(screen)
             menu_button.draw(screen)
 
-        # --------------------------------------------------------------------
-        # Sliding menu overlay (drawn last so it sits on top)
-        # --------------------------------------------------------------------
+        # sliding menu overlay (drawn last so it sits on top)
         if menu_open and menu_x < 0:
             menu_x += MENU_SPEED
             if menu_x > 0:

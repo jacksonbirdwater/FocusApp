@@ -17,16 +17,6 @@ DIFFICULTY_TIMES = {
 
 
 class SequenceGame:
-    """
-    Classic Simon-style sequence memory game.
-
-    States
-    ------
-    'playback'  — the game is flashing tiles for the player to watch
-    'input'     — the player must click tiles in order
-    'pausing'   — brief pause between a correct full-sequence and next round
-    'over'      — wrong tile pressed; caller should move to score_screen
-    """
 
     def __init__(self, difficulty):
         self.difficulty = difficulty
