@@ -1,14 +1,14 @@
 {
   "differences": {
-    "high_score": 7,
-    "games_played": 1
+    "high_score": 0,
+    "games_played": 0
   },
   "patterns": {
     "high_score": 0,
     "games_played": 0
   },
   "sequences": {
-    "high_score": 1,
+    "high_score": 0,
     "games_played": 1
   }
 }

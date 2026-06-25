@@ -502,7 +502,6 @@ def main():
             exit_button.draw(screen)
             menu_button.draw(screen)
             slider.draw(screen)
-            screen.blit(sunnyedmonds, (417, 635))
 
         elif current_screen == 'select_puzzle':
             screen.blit(bgdoodles, (0, 0))
